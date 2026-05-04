@@ -1,41 +1,67 @@
 package servlet;
 
+import dao.CaptureDAO;
+import dao.PecheurDAO;
+import model.Capture;
+import model.Utilisateur;
+import model.Pecheur;
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
-/**
- * Servlet implementation class CaptureServlet
- */
-@WebServlet("/CaptureServlet")
 public class CaptureServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public CaptureServlet() {
-        super();
-        // TODO Auto-generated constructor stub
+
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            res.sendRedirect("login.jsp"); return;
+        }
+
+        Utilisateur u = (Utilisateur) session.getAttribute("user");
+
+        // Trouver le pecheur lié à cet utilisateur par username
+        PecheurDAO pecheurDAO = new PecheurDAO();
+        Pecheur pecheur = pecheurDAO.trouverParUsername(u.getUsername());
+
+        if (pecheur == null) {
+            req.setAttribute("erreur", "Profil pecheur introuvable.");
+            req.setAttribute("captures", new java.util.ArrayList<>());
+            req.getRequestDispatcher("captures.jsp").forward(req, res);
+            return;
+        }
+
+        session.setAttribute("idPecheur", pecheur.getIdPecheur());
+
+        List<Capture> liste = new CaptureDAO()
+            .listerParPecheur(pecheur.getIdPecheur());
+        req.setAttribute("captures", liste);
+        req.getRequestDispatcher("captures.jsp").forward(req, res);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            res.sendRedirect("login.jsp"); return;
+        }
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
+        Integer idPecheur = (Integer) session.getAttribute("idPecheur");
+        if (idPecheur == null) {
+            res.sendRedirect("captures"); return;
+        }
 
+        String typePoisson = req.getParameter("typePoisson");
+        double poids = Double.parseDouble(req.getParameter("poids"));
+
+        Capture c = new Capture(0, idPecheur, typePoisson, poids, new Date());
+        new CaptureDAO().ajouter(c);
+        res.sendRedirect("captures");
+    }
 }

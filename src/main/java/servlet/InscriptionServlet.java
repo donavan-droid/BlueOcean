@@ -1,41 +1,43 @@
 package servlet;
 
+import dao.UtilisateurDAO;
+import dao.PecheurDAO;
+import model.Utilisateur;
+import model.Pecheur;
 import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Servlet implementation class InscriptionServlet
- */
-@WebServlet("/InscriptionServlet")
 public class InscriptionServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public InscriptionServlet() {
-        super();
-        // TODO Auto-generated constructor stub
+
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        String username = req.getParameter("username");
+        String password = req.getParameter("password");
+        String nom      = req.getParameter("nom");
+        String cin      = req.getParameter("cin");
+        String tel      = req.getParameter("telephone");
+
+        Utilisateur u = new Utilisateur(0, username, password, "pecheur");
+        UtilisateurDAO uDao = new UtilisateurDAO();
+        boolean ok = uDao.inscrire(u);
+
+        if (ok) {
+            Pecheur p = new Pecheur(0, nom, cin, tel);
+            new PecheurDAO().ajouter(p);
+            res.sendRedirect("login.jsp?inscription=ok");
+        } else {
+            req.setAttribute("erreur", "Erreur lors de l'inscription");
+            req.getRequestDispatcher("inscription.jsp").forward(req, res);
+        }
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
-
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        req.getRequestDispatcher("inscription.jsp").forward(req, res);
+    }
 }
