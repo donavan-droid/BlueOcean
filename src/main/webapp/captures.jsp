@@ -51,12 +51,22 @@
     </style>
 </head>
 <body>
+<%
+    String role = (String) session.getAttribute("role");
+    boolean isAdmin = "admin".equals(role);
+%>
 <nav>
     <strong>🌊 BlueOcean</strong>
     <div>
-        <a href="dashboard_pecheur.jsp">🏠 Accueil</a>
-        <a href="gps">📍 GPS</a>
-        <a href="meteo">🌦 Météo</a>
+        <% if (isAdmin) { %>
+            <a href="dashboard_admin.jsp">🏠 Accueil</a>
+        <% } else { %>
+            <a href="dashboard_pecheur.jsp">🏠 Accueil</a>
+            <a href="bateau">⛵ Bateau</a>
+            <a href="gps">📍 GPS</a>
+            <a href="meteo">🌦 Météo</a>
+            <a href="signalement"> ⚠ Signaler </a>
+        <% } %>
         <a href="logout">Déconnexion</a>
     </div>
 </nav>

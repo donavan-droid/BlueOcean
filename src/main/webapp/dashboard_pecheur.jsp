@@ -37,6 +37,7 @@
     <h1>🌊 BlueOcean</h1>
     <div>
         <span>Bonjour, <%= user.getUsername() %></span>
+        <a href="bateau">⛵ Bateau</a>
         <a href="captures">🐟 Mes captures</a>
         <a href="gps">📍 GPS</a>
         <a href="meteo">🌦 Météo</a>

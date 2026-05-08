@@ -23,11 +23,12 @@ public class MeteoServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
-            res.sendRedirect("login.jsp");
-            return;
+            res.sendRedirect("login.jsp"); return;
         }
 
-        // Appel API météo OpenWeatherMap
+        String role = (String) session.getAttribute("role");
+
+        // Appel API météo
         String urlStr = "https://api.openweathermap.org/data/2.5/weather?q="
                 + VILLE + "&appid=" + API_KEY + "&units=metric&lang=fr";
         String jsonMeteo = "";
@@ -45,11 +46,10 @@ public class MeteoServlet extends HttpServlet {
             jsonMeteo = "{\"error\":\"API indisponible\"}";
         }
 
-        // Récupération des alertes en BDD
         List<Alerte> alertes = new AlerteDAO().listerToutes();
-
         req.setAttribute("jsonMeteo", jsonMeteo);
         req.setAttribute("alertes", alertes);
+        req.setAttribute("role", role);  // ← passer le rôle à la JSP
         req.getRequestDispatcher("meteo.jsp").forward(req, res);
     }
 }

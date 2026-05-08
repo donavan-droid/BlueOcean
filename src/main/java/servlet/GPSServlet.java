@@ -6,7 +6,11 @@ import model.PositionGPS;
 import model.Bateau;
 import model.Utilisateur;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -23,19 +27,35 @@ public class GPSServlet extends HttpServlet {
 	        res.sendRedirect("login.jsp"); return;
 	    }
 
-	    // Récupérer idPecheur depuis la session
-	    Integer idPecheur = (Integer) session.getAttribute("idPecheur");
+	    String role = (String) session.getAttribute("role");
+	    BateauDAO bateauDAO = new BateauDAO();
+	    PositionGPSDAO posDAO = new PositionGPSDAO();
 
-	    List<Bateau> bateaux;
-	    if (idPecheur != null) {
-	        bateaux = new BateauDAO().listerParPecheur(idPecheur);
+	    if ("admin".equals(role)) {
+	        // Admin : récupérer tous les bateaux + leur dernière position
+	        List<Bateau> tousLesBateaux = bateauDAO.listerTous();
+	        List<Map<String, Object>> bateauxAvecPosition = new ArrayList<>();
+
+	        for (Bateau b : tousLesBateaux) {
+	            PositionGPS pos = posDAO.getDernierePosition(b.getIdBateau());
+	            Map<String, Object> data = new HashMap<>();
+	            data.put("bateau", b);
+	            data.put("position", pos);
+	            bateauxAvecPosition.add(data);
+	        }
+
+	        req.setAttribute("bateauxAvecPosition", bateauxAvecPosition);
+	        req.setAttribute("role", role);
+	        req.getRequestDispatcher("gps_admin.jsp").forward(req, res);
 	    } else {
-	        // Admin — afficher tous les bateaux
-	        bateaux = new BateauDAO().listerTous();
+	        // Pêcheur : afficher ses bateaux
+	        Integer idPecheur = (Integer) session.getAttribute("idPecheur");
+	        List<Bateau> bateaux = idPecheur != null
+	            ? bateauDAO.listerParPecheur(idPecheur)
+	            : new ArrayList<>();
+	        req.setAttribute("bateaux", bateaux);
+	        req.getRequestDispatcher("gps.jsp").forward(req, res);
 	    }
-
-	    req.setAttribute("bateaux", bateaux);
-	    req.getRequestDispatcher("gps.jsp").forward(req, res);
 	}
 
     protected void doPost(HttpServletRequest req, HttpServletResponse res)

@@ -65,6 +65,7 @@
     <div>
         <a href="gps">📍 Carte GPS</a>
         <a href="meteo">🌦 Météo</a>
+        <a href="signalement">⚠ Signalements</a>
         <a href="logout">Déconnexion</a>
     </div>
 </nav>

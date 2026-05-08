@@ -42,12 +42,22 @@
     </style>
 </head>
 <body>
+<%
+    String role = (String) session.getAttribute("role");
+    boolean isAdmin = "admin".equals(role);
+%>
 <nav>
     <strong>🌊 BlueOcean</strong>
     <div>
-        <a href="dashboard_pecheur.jsp">🏠 Accueil</a>
-        <a href="captures">🐟 Captures</a>
-        <a href="meteo">🌦 Météo</a>
+        <% if (isAdmin) { %>
+            <a href="dashboard_admin.jsp">🏠 Accueil</a>
+        <% } else { %>
+            <a href="dashboard_pecheur.jsp">🏠 Accueil</a>
+            <a href="bateau">⛵ Bateau</a>
+            <a href="captures">🐟 Captures</a>
+            <a href="meteo">🌦 Météo</a>
+            <a href="signalement"> ⚠ Signaler</a>
+        <% } %>
         <a href="logout">Déconnexion</a>
     </div>
 </nav>
@@ -100,23 +110,35 @@
     var marker = null;
 
     // Géolocalisation automatique
-    if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(function(pos) {
-            var lat = pos.coords.latitude;
-            var lng = pos.coords.longitude;
-            document.getElementById('lat').value = lat.toFixed(4);
-            document.getElementById('lng').value = lng.toFixed(4);
-            if (marker) {
-                marker.setLatLng([lat, lng]);
-            } else {
-                marker = L.marker([lat, lng])
-                    .addTo(map)
-                    .bindPopup("📍 Votre position")
-                    .openPopup();
-            }
-            map.setView([lat, lng], 10);
-        });
-    }
+	if (navigator.geolocation) {
+	    navigator.geolocation.getCurrentPosition(
+	        function(pos) {
+	            var lat = pos.coords.latitude;
+	            var lng = pos.coords.longitude;
+	            document.getElementById('lat').value = lat.toFixed(6);
+	            document.getElementById('lng').value = lng.toFixed(6);
+	            if (marker) {
+	                marker.setLatLng([lat, lng]);
+	            } else {
+	                marker = L.marker([lat, lng])
+	                    .addTo(map)
+	                    .bindPopup("📍 Votre position actuelle")
+	                    .openPopup();
+	            }
+	            map.setView([lat, lng], 13);
+	        },
+	        function(err) {
+	            // Si géolocalisation refusée, permettre saisie manuelle
+	            document.getElementById('msg').innerHTML =
+	                '<span style="color:orange;">⚠️ Géolocalisation non disponible. ' +
+	                'Entrez manuellement vos coordonnées.</span>';
+	        },
+	        { enableHighAccuracy: true, timeout: 10000 }
+	    );
+	} else {
+	    document.getElementById('msg').innerHTML =
+	        '<span style="color:red;">❌ Géolocalisation non supportée.</span>';
+	}
 
     function envoyerPosition() {
         var idBateau = document.getElementById('idBateau').value;
